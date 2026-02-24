@@ -110,7 +110,7 @@ if __name__ == "__main__":
     if args.once:
         run_once(args.market)
     else:
-        # _start_explorer_daemon()       # 暫停：隨機探索統計上不可靠，待重構
-        # _start_event_explorer_daemon()  # 暫停：同上
+        _start_explorer_daemon()
+        _start_event_explorer_daemon()
         logger.info("APScheduler 啟動，等待排程...")
         scheduler.start()
