@@ -1,0 +1,57 @@
+# ── 敏感設定（絕對不能 commit）──────────────────────────────
+config/.env
+
+# ── 資料庫與 Secret Key（個人交易資料）──────────────────────
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/webui.db
+data/vector_db/
+.webui_secret_key
+
+# ── Log 檔 ─────────────────────────────────────────────────
+data/logs/
+*.log
+
+# ── PID 檔 ─────────────────────────────────────────────────
+scripts/pids/
+*.pid
+
+# ── Python ─────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── 虛擬環境 ────────────────────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── 編輯器 ─────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ── Jupyter ────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── FinLab 快取 ────────────────────────────────────────────
+.finlab_cache/
+finlab_data/
+
+# ── 不公開的策略 ────────────────────────────────────────────
+# exp_* 實驗性策略未開源（手動設計，Sharpe 不足）
+# s07/s08/s09 在 repo 內保留佔位檔（僅含說明，不含實作）
+# s16/s17 為 disposal 自動探索策略，邏輯源自 FinLab 社群，已移除
+agents/strategies/exp_*.py
+agents/strategies/s16_*.py
+agents/strategies/s17_*.py
