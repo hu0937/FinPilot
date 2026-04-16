@@ -1,12 +1,33 @@
 #!/usr/bin/env python3
+import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import functools
 from loguru import logger
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-from config.settings import TELEGRAM_TOKEN
+from config.settings import TELEGRAM_TOKEN, ALLOWED_USER_IDS
+
+
+def auth_required(func):
+    """只允許 ALLOWED_USER_IDS 中的使用者呼叫此 handler。"""
+    @functools.wraps(func)
+    async def wrapper(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+        user_id = update.effective_user.id if update.effective_user else None
+        if not ALLOWED_USER_IDS:
+            logger.warning("TELEGRAM_ALLOWED_USER_IDS 未設定，拒絕所有請求（user_id={}）", user_id)
+            await update.message.reply_text("⛔ Bot 尚未開放授權，請聯繫管理員。")
+            return
+        if user_id not in ALLOWED_USER_IDS:
+            logger.warning("未授權存取（user_id={}）", user_id)
+            await update.message.reply_text("⛔ 您沒有使用此 Bot 的權限。")
+            return
+        return await func(update, ctx)
+    return wrapper
+
+
 from core.database import (
     add_to_watchlist, remove_from_watchlist, get_watchlist,
     buy_position, sell_position, get_positions, get_position_lots,
@@ -15,6 +36,7 @@ from core.database import (
 from bot.claude_handler import handle_claude_message
 
 
+@auth_required
 async def cmd_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "📈 量化分析平台 Bot\n\n"
@@ -36,6 +58,7 @@ async def cmd_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
 
+@auth_required
 async def cmd_add(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     args = ctx.args
     if len(args) < 2:
@@ -50,6 +73,7 @@ async def cmd_add(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(msg)
 
 
+@auth_required
 async def cmd_del(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     args = ctx.args
     if len(args) < 2:
@@ -61,6 +85,7 @@ async def cmd_del(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(msg)
 
 
+@auth_required
 async def cmd_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     market = ctx.args[0].upper() if ctx.args else None
     wl = get_watchlist(market=market)
@@ -78,6 +103,7 @@ async def cmd_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("\n".join(lines), parse_mode="HTML")
 
 
+@auth_required
 async def cmd_status(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     import os
     from datetime import datetime
@@ -109,6 +135,7 @@ async def cmd_status(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(msg, parse_mode="HTML")
 
 
+@auth_required
 async def cmd_pos(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     args = ctx.args
 
@@ -196,6 +223,7 @@ async def cmd_pos(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("未知子指令。用法：/pos [buy|sell|lots]")
 
 
+@auth_required
 async def cmd_price(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     args = ctx.args
     if len(args) < 2:
@@ -251,6 +279,7 @@ async def cmd_price(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("\n".join(lines), parse_mode="HTML")
 
 
+@auth_required
 async def cmd_risk(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     positions = get_positions()
     if not positions:
@@ -284,6 +313,7 @@ async def cmd_risk(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("\n".join(lines), parse_mode="HTML")
 
 
+@auth_required
 async def handle_text(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text.strip()
     if not user_text:
