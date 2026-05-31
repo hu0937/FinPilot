@@ -21,6 +21,12 @@ TELEGRAM_TOKEN    = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID  = os.getenv("TELEGRAM_CHAT_ID", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
+# --- Telegram Allowlist ---
+# 逗號分隔的 Telegram user ID，例如：TELEGRAM_ALLOWED_USER_IDS=123456789,987654321
+# 未設定時，bot 拒絕所有人（fail-safe）
+_raw_ids = os.getenv("TELEGRAM_ALLOWED_USER_IDS", "")
+ALLOWED_USER_IDS: set[int] = {int(x.strip()) for x in _raw_ids.split(",") if x.strip().isdigit()}
+
 HISTORY_DAYS   = 60  # days of price history to fetch
 
 # --- Claude Model ---
